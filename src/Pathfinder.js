@@ -14,9 +14,8 @@ export class Pathfinder {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }
 
-    findPath(start, end) {
-        // Simple grid, infinite open space, but we assume grid coordinates
-        // Create a unique key for the Set
+    findPath(start, end, bounds) {
+        // Simple grid
         const key = (point) => `${point.x},${point.y}`;
 
         const openSet = [start];
@@ -28,10 +27,9 @@ export class Pathfinder {
         const fScore = new Map();
         fScore.set(key(start), this.heuristic(start, end));
 
-        // Safety break to prevent infinite loops in a "virtual" infinite world
-        // We limit search depth since it's an open field
+        // Limit search
         let iterations = 0;
-        const maxIterations = 2000; 
+        const maxIterations = 5000; 
 
         while (openSet.length > 0) {
             iterations++;
@@ -51,9 +49,18 @@ export class Pathfinder {
 
             for (let dir of this.directions) {
                 const neighbor = { x: current.x + dir.x, y: current.y + dir.y };
+                
+                // Bounds Check
+                if (bounds) {
+                    if (neighbor.x < 0 || neighbor.x >= bounds.width || 
+                        neighbor.y < 0 || neighbor.y >= bounds.height) {
+                        continue;
+                    }
+                }
+
                 const neighborKey = key(neighbor);
 
-                // Assuming cost of 1 for all moves in open grass
+                // Assuming cost of 1 for all moves
                 const tentativeGScore = (gScore.get(key(current)) || Infinity) + 1;
 
                 if (tentativeGScore < (gScore.get(neighborKey) || Infinity)) {

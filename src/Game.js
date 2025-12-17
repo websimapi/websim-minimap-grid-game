@@ -12,17 +12,24 @@ export class Game {
         };
 
         // Player position in Grid Units (floats for smooth movement)
+        this.mapWidth = 40;
+        this.mapHeight = 40;
+
         this.player = {
-            x: 0,
-            y: 0,
+            x: Math.floor(this.mapWidth / 2),
+            y: Math.floor(this.mapHeight / 2),
             rotation: 0
         };
+
+        // Initialize camera to player position
+        this.camera.x = this.player.x * this.tileSize + this.tileSize / 2;
+        this.camera.y = this.player.y * this.tileSize + this.tileSize / 2;
 
         this.pathfinder = new Pathfinder();
         this.path = [];
         this.target = null;
         this.isMoving = false;
-        this.moveSpeed = 4.0; // Grid cells per second
+        this.moveSpeed = 6.0; // Grid cells per second
 
         this.lastTime = 0;
     }
@@ -90,6 +97,11 @@ export class Game {
         const gridX = Math.floor(worldPos.x / this.tileSize);
         const gridY = Math.floor(worldPos.y / this.tileSize);
 
+        // Check Bounds
+        if (gridX < 0 || gridX >= this.mapWidth || gridY < 0 || gridY >= this.mapHeight) {
+            return; // Clicked outside map
+        }
+
         // Current player integer grid pos
         const startNode = {
             x: Math.round(this.player.x),
@@ -98,8 +110,11 @@ export class Game {
 
         const endNode = { x: gridX, y: gridY };
 
+        // Bounds for pathfinder
+        const bounds = { width: this.mapWidth, height: this.mapHeight };
+
         // Calculate path
-        const newPath = this.pathfinder.findPath(startNode, endNode);
+        const newPath = this.pathfinder.findPath(startNode, endNode, bounds);
 
         if (newPath.length > 0) {
             this.path = newPath;

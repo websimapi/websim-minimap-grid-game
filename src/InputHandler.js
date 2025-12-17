@@ -7,7 +7,7 @@ export class InputHandler {
         this.isDragging = false;
         this.lastMouse = { x: 0, y: 0 };
         this.dragStart = { x: 0, y: 0 };
-        this.dragThreshold = 10; // Pixels to move before counting as a drag
+        this.dragThreshold = 15; // Pixels to move before counting as a drag
         this.hasDragged = false;
 
         // Pinch Zoom variables
@@ -74,7 +74,7 @@ export class InputHandler {
         e.preventDefault();
         const zoomSensitivity = 0.001;
         const newZoom = this.camera.zoom - (e.deltaY * zoomSensitivity * this.camera.zoom);
-        this.camera.zoom = Math.max(0.5, Math.min(5.0, newZoom));
+        this.camera.zoom = Math.max(0.1, Math.min(5.0, newZoom));
     }
 
     // --- Touch Logic ---
@@ -107,7 +107,7 @@ export class InputHandler {
             const scale = currentDist / this.initialPinchDistance;
             
             let newZoom = this.initialZoom * scale;
-            this.camera.zoom = Math.max(0.5, Math.min(5.0, newZoom));
+            this.camera.zoom = Math.max(0.1, Math.min(5.0, newZoom));
         }
     }
 
@@ -120,12 +120,15 @@ export class InputHandler {
 
     screenToWorld(screenX, screenY) {
         const rect = this.canvas.getBoundingClientRect();
+        const relativeX = screenX - rect.left;
+        const relativeY = screenY - rect.top;
+        
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
 
         // Offset from center, divide by zoom, add camera position
-        const worldX = (screenX - centerX) / this.camera.zoom + this.camera.x;
-        const worldY = (screenY - centerY) / this.camera.zoom + this.camera.y;
+        const worldX = (relativeX - centerX) / this.camera.zoom + this.camera.x;
+        const worldY = (relativeY - centerY) / this.camera.zoom + this.camera.y;
 
         return { x: worldX, y: worldY };
     }

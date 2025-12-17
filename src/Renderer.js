@@ -39,8 +39,9 @@ export class Renderer {
     }
 
     drawGrid(camera, screenW, screenH) {
-        // Optimization: Only draw visible tiles
-        // Calculate the view bounds in world coordinates
+        const { mapWidth, mapHeight } = this.game;
+
+        // World Bounds of current view
         const halfW = (screenW / 2) / camera.zoom;
         const halfH = (screenH / 2) / camera.zoom;
         
@@ -49,11 +50,11 @@ export class Renderer {
         const top = camera.y - halfH;
         const bottom = camera.y + halfH;
 
-        // Convert to grid indices
-        const startCol = Math.floor(left / this.tileSize);
-        const endCol = Math.ceil(right / this.tileSize);
-        const startRow = Math.floor(top / this.tileSize);
-        const endRow = Math.ceil(bottom / this.tileSize);
+        // Grid Visible Range (clamped to map size)
+        const startCol = Math.max(0, Math.floor(left / this.tileSize));
+        const endCol = Math.min(mapWidth - 1, Math.ceil(right / this.tileSize));
+        const startRow = Math.max(0, Math.floor(top / this.tileSize));
+        const endRow = Math.min(mapHeight - 1, Math.ceil(bottom / this.tileSize));
 
         for (let x = startCol; x <= endCol; x++) {
             for (let y = startRow; y <= endRow; y++) {
@@ -62,19 +63,32 @@ export class Renderer {
 
                 // Draw Grass
                 if (this.assets.grass) {
-                    // Draw image slightly larger to avoid gaps at high zoom
                     this.ctx.drawImage(this.assets.grass, posX, posY, this.tileSize + 1, this.tileSize + 1);
                 } else {
                     this.ctx.fillStyle = ((x + y) % 2 === 0) ? '#4CAF50' : '#45a049';
                     this.ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
                 }
 
-                // Grid lines (subtle)
+                // Grid lines
                 this.ctx.strokeStyle = 'rgba(0,0,0,0.1)';
                 this.ctx.lineWidth = 1;
                 this.ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
             }
         }
+
+        // Draw Map Border
+        const mapPixelW = mapWidth * this.tileSize;
+        const mapPixelH = mapHeight * this.tileSize;
+        
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.lineWidth = 4;
+        this.ctx.strokeRect(0, 0, mapPixelW, mapPixelH);
+
+        // Add a shadow/glow to border
+        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.shadowBlur = 20;
+        this.ctx.strokeRect(0, 0, mapPixelW, mapPixelH);
+        this.ctx.shadowBlur = 0;
     }
 
     drawPath(path) {
